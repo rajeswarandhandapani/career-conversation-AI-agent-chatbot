@@ -78,13 +78,13 @@ class Me:
     def __init__(self):
         self.openai = OpenAI()
         self.name = "Rajeswaran Dhandapani"
-        reader = PdfReader("chatbot/my-profile/linkedin.pdf")
+        reader = PdfReader("my-profile/linkedin.pdf")
         self.linkedin = ""
         for page in reader.pages:
             text = page.extract_text()
             if text:
                 self.linkedin += text
-        with open("chatbot/my-profile/summary.txt", "r", encoding="utf-8") as f:
+        with open("my-profile/summary.txt", "r", encoding="utf-8") as f:
             self.summary = f.read()
 
 
