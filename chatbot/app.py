@@ -71,8 +71,7 @@ class ChatBot:
 
 
     async def chat(self, message, history, request: gr.Request):
-        ip_address = request.client.host
-        print(self.previous_response_id)
+        ip_address = request.headers.get("x-forwarded-for", request.client.host)
         with trace(f"Processing request from {ip_address}"):
             prev_id = self.previous_response_id.get(ip_address)
             if prev_id:
@@ -84,7 +83,6 @@ class ChatBot:
 
 
 if __name__ == "__main__":
-    with gr.Blocks() as app:
-        chatBot = ChatBot()
-        gr.ChatInterface(chatBot.chat, type="messages")
+    chatBot = ChatBot()
+    app = gr.ChatInterface(chatBot.chat, type="messages")
     app.launch()
