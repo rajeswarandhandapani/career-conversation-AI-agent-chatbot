@@ -38,7 +38,7 @@ class ChatBot:
         self.name = "Rajeswaran Dhandapani"
         self.linkedin = ""
         self.summary = ""
-        self.previous_response_id = None
+        self.previous_response_id = {}
         self.agent = Agent(
             name="Career Conversation Agent",
             model="gpt-4o-mini",
@@ -73,12 +73,14 @@ class ChatBot:
 
     async def chat(self, message, history, request: gr.Request):
         ip_address = request.client.host
+        print(self.previous_response_id)
         with trace(f"Processing request from {ip_address}"):
-            if self.previous_response_id:
-                result = await Runner.run(self.agent, message, previous_response_id=self.previous_response_id[0])
+            prev_id = self.previous_response_id.get(ip_address)
+            if prev_id:
+                result = await Runner.run(self.agent, message, previous_response_id=prev_id[0])
             else:
                 result = await Runner.run(self.agent, message)
-            self.previous_response_id=result.last_response_id,
+            self.previous_response_id[ip_address]=result.last_response_id,
             return result.final_output
 
 
