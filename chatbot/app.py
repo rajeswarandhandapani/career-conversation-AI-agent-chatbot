@@ -39,12 +39,6 @@ class ChatBot:
         self.linkedin = ""
         self.summary = ""
         self.previous_response_id = {}
-        self.agent = Agent(
-            name="Career Conversation Agent",
-            model="gpt-4o-mini",
-            instructions=self.system_prompt(),
-            tools=tools
-        )
         reader = PdfReader("my-profile/linkedin.pdf")
         for page in reader.pages:
             text = page.extract_text()
@@ -52,7 +46,12 @@ class ChatBot:
                 self.linkedin += text
         with open("my-profile/summary.txt", "r", encoding="utf-8") as f:
             self.summary = f.read()
-
+        self.agent = Agent(
+            name="Career Conversation Agent",
+            model="gpt-4o-mini",
+            instructions=self.system_prompt(),
+            tools=tools
+        )
 
     def system_prompt(self):
         system_prompt = (
