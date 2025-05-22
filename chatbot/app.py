@@ -73,7 +73,7 @@ class ChatBot:
 
 
     async def chat(self, message, history, request: gr.Request):
-        ip_address = request.headers.get("x-forwarded-for", request.client.host)
+        ip_address = request.headers.get("x-forwarded-for", request.client.host) if request and hasattr(request, "headers") else "unknown"
         with trace(f"Processing request from {ip_address}"):
             prev_id = self.previous_response_id.get(ip_address)
             if prev_id:
