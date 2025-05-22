@@ -86,5 +86,11 @@ class ChatBot:
 
 if __name__ == "__main__":
     chatBot = ChatBot()
-    app = gr.ChatInterface(chatBot.chat, type="messages")
+    app = gr.ChatInterface(
+        chatBot.chat,
+        type="messages",
+        title="Hello, I'm Rajeswaran Dhandapani",
+        examples=["Do you hold any certifications?", "What is your background?", "What are your skills?", "What are your hobbies?", "What is your experience?", "What are your career goals?", "What are your projects?"],
+        theme='soft'
+    )
     app.launch()
