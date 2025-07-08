@@ -4,9 +4,57 @@ import gradio as gr
 import requests
 from agents import Agent, Runner, trace, function_tool
 from dotenv import load_dotenv
-from pypdf import PdfReader
+from bs4 import BeautifulSoup
 
 load_dotenv(override=True)
+
+def extract_website_content(url):
+    """Extract text content from a website including external hyperlinks, with file fallback"""
+    try:
+        response = requests.get(url, timeout=10)
+        response.raise_for_status()
+        
+        soup = BeautifulSoup(response.content, 'html.parser')
+        
+        # Remove script and style elements
+        for script in soup(["script", "style"]):
+            script.decompose()
+        
+        # Process links to include external URLs
+        for link in soup.find_all('a', href=True):
+            href = link.get('href')
+            text = link.get_text().strip()
+            
+            # Check if it's an external link (starts with http/https)
+            if href.startswith(('http://', 'https://')) and text:
+                # Replace the link with text and URL
+                link.replace_with(f"{text} ({href})")
+            elif text:
+                # Keep internal links as just text
+                link.replace_with(text)
+        
+        # Get text content
+        text = soup.get_text()
+        
+        # Clean up the text
+        lines = (line.strip() for line in text.splitlines())
+        chunks = (phrase.strip() for line in lines for phrase in line.split("  "))
+        text = ' '.join(chunk for chunk in chunks if chunk)
+        
+        return text
+    except Exception as e:
+        print(f"Website extraction failed: {str(e)}, using backup summary from file...")
+        # If website extraction fails, use backup summary from file
+        try:
+            with open("my-profile/summary.txt", "r", encoding="utf-8") as f:
+                content = f.read()
+            print("Successfully loaded backup summary from file")
+            return content
+        except FileNotFoundError:
+            print("Backup summary file not found, using hardcoded fallback")
+            return """My name is Rajeswaran Dhandapani. I'm a Full stack developer with 12+ years of experience developing and designing web applications. Proficient in various programming languages and frameworks, including Java, JavaScript, Angular, Spring Boot and Kafka. Robust front-end and back-end development skills, focusing on creating intuitive and user-friendly interfaces. Experienced in agile environments, collaborating with crossfunctional teams, and overseeing code reviews.
+I love all foods, particularly Indian food and desserts. I enjoy playing cricket and badminton, and I am a fan of the Chennai Super Kings IPL team.
+My current goal is to become an AI application developer by leveraging my existing skills and experience. I am actively working towards this goal, and one example of my progress is this AI-enabled chatbot."""
 
 def push(text):
     requests.post(
@@ -36,16 +84,14 @@ class ChatBot:
 
     def __init__(self):
         self.name = "Rajeswaran Dhandapani"
-        self.linkedin = ""
         self.summary = ""
         self.previous_response_id = {}
-        reader = PdfReader("my-profile/linkedin.pdf")
-        for page in reader.pages:
-            text = page.extract_text()
-            if text:
-                self.linkedin += text
-        with open("my-profile/summary.txt", "r", encoding="utf-8") as f:
-            self.summary = f.read()
+        
+        # Extract profile information from website (with automatic fallback)
+        website_url = "https://rajeswarandhandapani.com/"
+        self.summary = extract_website_content(website_url)
+        print(f"Extracted summary: {self.summary[:100]}...")  # Print first 100 characters for debugging
+        
         self.agent = Agent(
             name="Career Conversation Agent",
             model="gpt-4o-mini",
@@ -58,7 +104,7 @@ class ChatBot:
             f"You are acting as {self.name}. You are answering questions on {self.name}'s website, "
             f"particularly questions related to {self.name}'s career, background, skills and experience. "
             f"Your responsibility is to represent {self.name} for interactions on the website as faithfully as possible. "
-            f"You are given a summary of {self.name}'s background and LinkedIn profile which you can use to answer questions. "
+            f"You are given a summary of {self.name}'s background profile which you can use to answer questions. "
             f"Be professional and engaging, as if talking to a potential client or future employer who came across the website. "
             f"If you don't know the answer to any question, use your record_unknown_question tool to record the question that you couldn't answer, even if it's about something trivial or unrelated to career. "
             f"If the user is engaging in discussion, try to steer them towards getting in touch via email; ask for their email and record it using your record_user_details tool."
@@ -66,7 +112,7 @@ class ChatBot:
             f"Also avoid answering about generic questions and chat. Always direct the user to {self.name}'s career opportunities. "
         )
         system_prompt += (
-            f"\n\n## Summary:\n{self.summary}\n\n## LinkedIn Profile:\n{self.linkedin}\n\n"
+            f"\n\n## Summary:\n{self.summary}\n\n"
             f"With this context, please chat with the user, always staying in character as {self.name}."
         )
         return system_prompt
@@ -90,7 +136,7 @@ if __name__ == "__main__":
         chatBot.chat,
         type="messages",
         title="Hello, I'm Rajeswaran Dhandapani",
-        examples=["Do you hold any certifications?", "What is your background?", "What are your skills?", "What are your hobbies?", "What is your experience?", "What are your career goals?", "What are your projects?"],
+        examples=["Do you hold any certifications?", "What are your skills?",],
         theme='soft'
     )
     app.launch()

@@ -1,6 +1,6 @@
 requests
 python-dotenv
 gradio
-pypdf
+beautifulsoup4
 openai
 openai-agents
