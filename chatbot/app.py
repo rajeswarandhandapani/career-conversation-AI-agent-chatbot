@@ -137,6 +137,6 @@ if __name__ == "__main__":
         type="messages",
         title="Hello, I'm Rajeswaran Dhandapani",
         examples=["Do you hold any certifications?", "What are your skills?",],
-        theme='soft'
+        theme='origin'
     )
     app.launch()
