@@ -132,11 +132,28 @@ class ChatBot:
 
 if __name__ == "__main__":
     chatBot = ChatBot()
+    
+    # Simple mobile-friendly CSS
+    mobile_css = """
+    @media (max-width: 768px) {
+        /* Prevent zoom on input focus */
+        input, textarea {
+            font-size: 16px !important;
+        }
+        
+        /* Ensure input stays visible */
+        .gradio-container {
+            padding-bottom: 20px;
+        }
+    }
+    """
+    
     app = gr.ChatInterface(
         chatBot.chat,
         type="messages",
         title="Hello, I'm Rajeswaran Dhandapani",
         examples=["Do you hold any certifications?", "What are your skills?",],
-        theme='origin'
+        theme='origin',
+        css=mobile_css
     )
     app.launch()
