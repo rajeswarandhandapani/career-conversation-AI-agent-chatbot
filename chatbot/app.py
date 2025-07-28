@@ -1,7 +1,10 @@
 import os
 
+
 import gradio as gr
 import requests
+import threading
+import time
 from agents import Agent, Runner, trace, function_tool
 from dotenv import load_dotenv
 from bs4 import BeautifulSoup
@@ -79,10 +82,6 @@ def record_unknown_question(question: str):
     return {"recorded": "ok"}
 
 tools = [record_user_details, record_unknown_question]
-
-
-import threading
-import time
 
 class ChatBot:
     def __init__(self):
