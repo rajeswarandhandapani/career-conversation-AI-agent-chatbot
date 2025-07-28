@@ -80,18 +80,27 @@ def record_unknown_question(question: str):
 
 tools = [record_user_details, record_unknown_question]
 
-class ChatBot:
 
+import threading
+import time
+
+class ChatBot:
     def __init__(self):
         self.name = "Rajeswaran Dhandapani"
         self.summary = ""
         self.previous_response_id = {}
-        
-        # Extract profile information from website (with automatic fallback)
-        website_url = "https://rajeswarandhandapani.com/"
-        self.summary = extract_website_content(website_url)
+        self.website_url = "https://rajeswarandhandapani.com/"
+        self._summary_lock = threading.Lock()
+
+        # Initial extraction
+        self._refresh_summary()
         print(f"Extracted summary: {self.summary[:100]}...")  # Print first 100 characters for debugging
-        
+
+        # Start background thread to refresh summary every hour
+        self._stop_refresh = False
+        self._refresh_thread = threading.Thread(target=self._periodic_refresh_summary, daemon=True)
+        self._refresh_thread.start()
+
         self.agent = Agent(
             name="Career Conversation Agent",
             model="gpt-4o-mini",
@@ -99,7 +108,23 @@ class ChatBot:
             tools=tools
         )
 
+    def _refresh_summary(self):
+        summary = extract_website_content(self.website_url)
+        with self._summary_lock:
+            self.summary = summary
+
+    def _periodic_refresh_summary(self):
+        while not self._stop_refresh:
+            time.sleep(3600)  # 1 hour
+            try:
+                self._refresh_summary()
+                print("[ChatBot] Refreshed website summary.")
+            except Exception as e:
+                print(f"[ChatBot] Failed to refresh summary: {e}")
+
     def system_prompt(self):
+        with self._summary_lock:
+            summary = self.summary
         system_prompt = (
             f"You are acting as {self.name}. You are answering questions on {self.name}'s website, "
             f"particularly questions related to {self.name}'s career, background, skills and experience. "
@@ -112,7 +137,7 @@ class ChatBot:
             f"Also avoid answering about generic questions and chat. Always direct the user to {self.name}'s career opportunities. "
         )
         system_prompt += (
-            f"\n\n## Summary:\n{self.summary}\n\n"
+            f"\n\n## Summary:\n{summary}\n\n"
             f"With this context, please chat with the user, always staying in character as {self.name}."
         )
         return system_prompt
