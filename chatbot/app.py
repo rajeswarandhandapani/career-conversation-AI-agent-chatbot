@@ -117,9 +117,11 @@ class ChatBot:
             time.sleep(3600)  # 1 hour
             try:
                 self._refresh_summary()
-                print("[ChatBot] Refreshed website summary.")
+                current_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
+                print(f"[ChatBot] Refreshed website summary at {current_time}")
             except Exception as e:
-                print(f"[ChatBot] Failed to refresh summary: {e}")
+                current_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
+                print(f"[ChatBot] Failed to refresh summary at {current_time}: {e}")
 
     def system_prompt(self):
         with self._summary_lock:
