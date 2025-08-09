@@ -118,7 +118,7 @@ class ChatBot:
 
         self.agent = Agent(
             name="Career Conversation Agent",
-            model="gpt-4o-mini",
+            model="gpt-5-mini",
             instructions=self.system_prompt(),
             tools=tools
         )
