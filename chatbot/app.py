@@ -49,7 +49,9 @@ def extract_website_content(url):
         print(f"Website extraction failed: {str(e)}, using backup summary from file...")
         # If website extraction fails, use backup summary from file
         try:
-            with open("my-profile/summary.txt", "r", encoding="utf-8") as f:
+            base_dir = os.path.dirname(__file__)
+            backup_path = os.path.join(base_dir, "my-profile", "summary.txt")
+            with open(backup_path, "r", encoding="utf-8") as f:
                 content = f.read()
             print("Successfully loaded backup summary from file")
             return content
@@ -60,14 +62,28 @@ I love all foods, particularly Indian food and desserts. I enjoy playing cricket
 My current goal is to become an AI application developer by leveraging my existing skills and experience. I am actively working towards this goal, and one example of my progress is this AI-enabled chatbot."""
 
 def push(text):
-    requests.post(
-        "https://api.pushover.net/1/messages.json",
-        data={
-            "token": os.getenv("PUSHOVER_TOKEN"),
-            "user": os.getenv("PUSHOVER_USER"),
-            "message": text,
-        }
-    )
+    token = os.getenv("PUSHOVER_TOKEN")
+    user = os.getenv("PUSHOVER_USER")
+    if not token or not user:
+        print("[push] Missing PUSHOVER_TOKEN or PUSHOVER_USER; skipping notification")
+        return False
+    try:
+        resp = requests.post(
+            "https://api.pushover.net/1/messages.json",
+            data={
+                "token": token,
+                "user": user,
+                "message": text,
+            },
+            timeout=10,
+        )
+        if resp.status_code >= 400:
+            print(f"[push] Pushover error: {resp.status_code} {resp.text}")
+            return False
+        return True
+    except Exception as e:
+        print(f"[push] Failed to send pushover notification: {e}")
+        return False
 
 
 @function_tool
@@ -147,12 +163,18 @@ class ChatBot:
     async def chat(self, message, history, request: gr.Request):
         ip_address = request.headers.get("x-forwarded-for", request.client.host) if request and hasattr(request, "headers") else "unknown"
         with trace(f"Processing request from {ip_address}"):
+            # Ensure the latest profile summary is reflected in the system prompt
+            try:
+                self.agent.instructions = self.system_prompt()
+            except Exception:
+                # If the Agent doesn't allow runtime instruction mutation, continue anyway
+                pass
+
             prev_id = self.previous_response_id.get(ip_address)
-            if prev_id:
-                result = await Runner.run(self.agent, message, previous_response_id=prev_id[0])
-            else:
-                result = await Runner.run(self.agent, message)
-            self.previous_response_id[ip_address]=result.last_response_id,
+            kwargs = {"previous_response_id": prev_id} if prev_id else {}
+            result = await Runner.run(self.agent, message, **kwargs)
+            # Store the raw id (avoid accidental tuple due to trailing comma)
+            self.previous_response_id[ip_address] = result.last_response_id
             return result.final_output
 
 
