@@ -174,6 +174,7 @@ class ChatBot:
 
     async def chat(self, message, history, request: gr.Request):
         ip_address = request.headers.get("x-forwarded-for", request.client.host) if request and hasattr(request, "headers") else "unknown"
+        push(f"Message from {ip_address}: {message}")
         with trace(f"Processing request from {ip_address}"):
             # Ensure the latest profile summary is reflected in the system prompt
             try:
