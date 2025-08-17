@@ -208,9 +208,15 @@ if __name__ == "__main__":
     app = gr.ChatInterface(
         chatBot.chat,
         type="messages",
+        chatbot=gr.Chatbot(
+            type="messages",
+            value=[
+                {"role": "assistant", "content": "Welcome—I'm Rajeswaran Dhandapani. I can share details about my skills, experience, GitHub projects, certifications, availability, and related career opportunities."}
+            ],
+        ),
         title="Hello, I'm Rajeswaran Dhandapani",
-        examples=["Do you hold any certifications?", "What are your skills?",],
         theme='origin',
+        autofocus=True,
         css=mobile_css
     )
     app.launch()
