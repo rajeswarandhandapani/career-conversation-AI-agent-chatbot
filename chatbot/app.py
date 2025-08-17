@@ -211,7 +211,7 @@ if __name__ == "__main__":
         chatbot=gr.Chatbot(
             type="messages",
             value=[
-                {"role": "assistant", "content": "Welcome—I'm Rajeswaran Dhandapani. I can share details about my skills, experience, GitHub projects, certifications, availability, and related career opportunities."}
+                {"role": "assistant", "content": "Welcome, I'm Rajeswaran Dhandapani. I can share details about my skills, experience, GitHub projects, certifications, availability, and related career opportunities."}
             ],
         ),
         title="Hello, I'm Rajeswaran Dhandapani",
