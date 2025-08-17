@@ -118,7 +118,7 @@ class ChatBot:
 
         self.agent = Agent(
             name="Career Conversation Agent",
-            model="gpt-5-mini",
+            model="gpt-5-nano",
             instructions=self.system_prompt(),
             tools=tools
         )
@@ -190,21 +190,6 @@ class ChatBot:
 if __name__ == "__main__":
     chatBot = ChatBot()
     
-    # Simple mobile-friendly CSS
-    mobile_css = """
-    @media (max-width: 768px) {
-        /* Prevent zoom on input focus */
-        input, textarea {
-            font-size: 16px !important;
-        }
-        
-        /* Ensure input stays visible */
-        .gradio-container {
-            padding-bottom: 20px;
-        }
-    }
-    """
-    
     app = gr.ChatInterface(
         chatBot.chat,
         type="messages",
@@ -213,10 +198,14 @@ if __name__ == "__main__":
             value=[
                 {"role": "assistant", "content": "Welcome, I'm Rajeswaran Dhandapani. I can share details about my skills, experience, GitHub projects, certifications, availability, and related career opportunities."}
             ],
+            min_height=500,
+            bubble_full_width=True,
         ),
         title="Hello, I'm Rajeswaran Dhandapani",
-        theme='origin',
+        theme=gr.themes.Origin(),
+        fill_height=True,
+        fill_width=True,
         autofocus=True,
-        css=mobile_css
+        autoscroll=True,
     )
     app.launch()
