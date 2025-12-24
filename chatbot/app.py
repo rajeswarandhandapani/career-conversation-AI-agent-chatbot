@@ -219,7 +219,6 @@ if __name__ == "__main__":
             ],
             min_height=500,
         ),
-        title="Hello, I'm Rajeswaran Dhandapani",
         fill_height=True,
         fill_width=True,
         autofocus=True,
