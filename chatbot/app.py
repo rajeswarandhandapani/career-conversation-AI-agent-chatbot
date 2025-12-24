@@ -217,8 +217,10 @@ if __name__ == "__main__":
             value=[
                 {"role": "assistant", "content": "Welcome, I'm Rajeswaran Dhandapani. I can share details about my skills, experience, GitHub projects, certifications, availability, and related career opportunities."}
             ],
-            min_height=500,
+            scale=1,
+            height="80vh",
         ),
+        submit_btn=True,
         fill_height=True,
         fill_width=True,
         autofocus=True,
