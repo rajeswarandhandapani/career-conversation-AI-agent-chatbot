@@ -87,7 +87,7 @@ flowchart TB
 - **Web Scraping**: BeautifulSoup4
 - **Notifications**: Pushover API
 - **Hosting**: HuggingFace Spaces
-- **Package Manager**: UV (Python)
+- **Package Manager**: pip + venv
 - **Async Runtime**: Python asyncio
 
 ## Project Structure
@@ -99,8 +99,7 @@ career-conversation-AI-agent-chatbot/
 │   ├── app.py                 # Main application
 │   └── my-profile/
 │       └── summary.txt        # Backup profile content
-├── pyproject.toml             # Python dependencies
-├── uv.lock                    # Locked dependencies
+├── requirements.txt           # Python dependencies
 └── README.md
 ```
 
@@ -118,7 +117,6 @@ career-conversation-AI-agent-chatbot/
 
 ### Prerequisites
 - Python 3.11+
-- UV package manager
 - OpenAI API Key
 - Pushover Account (optional, for notifications)
 
@@ -129,11 +127,12 @@ career-conversation-AI-agent-chatbot/
 git clone https://github.com/rajeswarandhandapani/career-conversation-AI-agent-chatbot.git
 cd career-conversation-AI-agent-chatbot
 
-# Install UV if not already installed
-pip install uv
+# Create and activate virtual environment
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
 
 # Install dependencies
-uv sync
+pip install -r requirements.txt
 
 # Configure environment variables
 cp .env.example .env
@@ -143,14 +142,14 @@ cp .env.example .env
 # PUSHOVER_USER=your_user
 
 # Run locally
-uv run python chatbot/app.py
+python chatbot/app.py
 ```
 
 ### Deploy to HuggingFace Spaces
 
 ```bash
 # Deploy with Gradio
-uv run gradio deploy
+gradio deploy
 
 # Follow prompts:
 # - Name: career_conversation

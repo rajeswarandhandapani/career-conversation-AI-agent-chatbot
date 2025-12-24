@@ -1,0 +1,7 @@
+beautifulsoup4>=4.14.3
+gradio>=6.2.0
+openai>=2.14.0
+openai-agents>=0.6.4
+pypdf>=6.5.0
+python-dotenv>=1.2.1
+requests>=2.32.5

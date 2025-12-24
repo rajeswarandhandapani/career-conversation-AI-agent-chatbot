@@ -11,3 +11,4 @@
 *.iml
 .idea/
 .env
+.venv
