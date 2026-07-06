@@ -5,7 +5,10 @@ import gradio as gr
 import requests
 import threading
 import time
-from agents import Agent, Runner, trace, function_tool
+from langchain.agents import create_agent
+from langchain.agents.middleware import dynamic_prompt, ModelRequest
+from langchain.tools import tool
+from langgraph.checkpoint.memory import InMemorySaver
 from dotenv import load_dotenv
 from bs4 import BeautifulSoup
 
@@ -86,24 +89,50 @@ def push(text):
         return False
 
 
-@function_tool
-def record_user_details(email: str, name: str, notes: str):
+@tool
+def record_user_details(email: str, name: str, notes: str) -> dict:
+    """Record contact details of a visitor who is interested in getting in touch.
+
+    Args:
+        email: The visitor's email address.
+        name: The visitor's name.
+        notes: Any additional context about the visitor or their interest.
+    """
     push(f"Recording {name} with email {email} and notes {notes}")
     return {"recorded": "ok"}
 
 
-@function_tool
-def record_unknown_question(question: str):
+@tool
+def record_unknown_question(question: str) -> dict:
+    """Log a question that could not be answered or was out of scope.
+
+    Args:
+        question: The question that could not be answered.
+    """
     push(f"Recording {question}")
     return {"recorded": "ok"}
 
 tools = [record_user_details, record_unknown_question]
 
+
+def extract_text(content) -> str:
+    """Extract plain text from LangChain message content (str or content blocks)."""
+    if isinstance(content, str):
+        return content
+    if isinstance(content, list):
+        parts = []
+        for block in content:
+            if isinstance(block, str):
+                parts.append(block)
+            elif isinstance(block, dict) and block.get("type") == "text":
+                parts.append(block.get("text", ""))
+        return "".join(parts)
+    return str(content)
+
 class ChatBot:
     def __init__(self):
         self.name = "Rajeswaran Dhandapani"
         self.summary = ""
-        self.previous_response_id = {}
         self.website_url = "https://rajeswarandhandapani.com/"
         self._summary_lock = threading.Lock()
 
@@ -116,11 +145,20 @@ class ChatBot:
         self._refresh_thread = threading.Thread(target=self._periodic_refresh_summary, daemon=True)
         self._refresh_thread.start()
 
-        self.agent = Agent(
-            name="Career Conversation Agent",
-            model="gpt-5-mini",
-            instructions=self.system_prompt(),
-            tools=tools
+        # Per-IP conversation memory; unbounded growth is acceptable at this
+        # Space's traffic (same order of concern as the old per-IP dict).
+        self.checkpointer = InMemorySaver()
+
+        @dynamic_prompt
+        def live_system_prompt(request: ModelRequest) -> str:
+            # Rebuilt per model call so the hourly-refreshed summary stays current
+            return self.system_prompt()
+
+        self.agent = create_agent(
+            model=os.getenv("CHAT_MODEL", "openai:gpt-5-mini"),
+            tools=tools,
+            middleware=[live_system_prompt],
+            checkpointer=self.checkpointer,
         )
 
     def _refresh_summary(self):
@@ -192,20 +230,13 @@ class ChatBot:
     async def chat(self, message, history, request: gr.Request):
         ip_address = request.headers.get("x-forwarded-for", request.client.host) if request and hasattr(request, "headers") else "unknown"
         push(f"Message from {ip_address}: {message}")
-        with trace(f"Processing request from {ip_address}"):
-            # Ensure the latest profile summary is reflected in the system prompt
-            try:
-                self.agent.instructions = self.system_prompt()
-            except Exception:
-                # If the Agent doesn't allow runtime instruction mutation, continue anyway
-                pass
 
-            prev_id = self.previous_response_id.get(ip_address)
-            kwargs = {"previous_response_id": prev_id} if prev_id else {}
-            result = await Runner.run(self.agent, message, **kwargs)
-            # Store the raw id (avoid accidental tuple due to trailing comma)
-            self.previous_response_id[ip_address] = result.last_response_id
-            return result.final_output
+        config = {"configurable": {"thread_id": ip_address}}
+        result = await self.agent.ainvoke(
+            {"messages": [{"role": "user", "content": message}]},
+            config=config,
+        )
+        return extract_text(result["messages"][-1].content)
 
 
 if __name__ == "__main__":
@@ -215,7 +246,7 @@ if __name__ == "__main__":
         chatBot.chat,
         chatbot=gr.Chatbot(
             value=[
-                {"role": "assistant", "content": "Welcome, I'm Rajeswaran Dhandapani. I can share details about my skills, experience, GitHub projects, certifications, availability, and related career opportunities."}
+                {"role": "assistant", "content": "Hi, I'm Rajeswaran's AI twin \U0001f44b Ask me anything — my skills, experience, GitHub projects, certifications, or whether I'm available for new opportunities. What would you like to know?"}
             ],
             scale=1,
             height="80vh",

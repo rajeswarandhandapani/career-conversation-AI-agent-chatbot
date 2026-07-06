@@ -1,6 +1,11 @@
 ---
-title: career-conversation-AI-agent-chatbot
-app_file: app.py
+title: Career Conversation AI Agent Chatbot
+emoji: 💼
+colorFrom: blue
+colorTo: indigo
 sdk: gradio
-sdk_version: 6.2.0
+sdk_version: 6.19.0
+app_file: app.py
+pinned: false
+license: mit
 ---
