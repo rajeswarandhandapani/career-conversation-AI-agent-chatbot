@@ -30,7 +30,7 @@ flowchart TB
         
         subgraph Agent["🦜 LangChain Agent"]
             CareerAgent["create_agent<br/>CHAT_MODEL (default GPT-5-mini)"]
-            Checkpointer["LangGraph InMemorySaver<br/>Per-IP Conversation Memory"]
+            Checkpointer["LangGraph InMemorySaver<br/>Per-Session Conversation Memory"]
         end
         
         subgraph Tools["🔧 Function Tools"]
@@ -78,7 +78,7 @@ flowchart TB
 | **Live Profile Extraction** | Scrapes portfolio website hourly for up-to-date content |
 | **Function Calling** | Custom tools for recording user details and questions |
 | **Push Notifications** | Real-time alerts via Pushover API for visitor interactions |
-| **Conversation Memory** | LangGraph `InMemorySaver` checkpointer keyed by visitor IP (`thread_id`) |
+| **Conversation Memory** | LangGraph `InMemorySaver` checkpointer keyed by Gradio browser session (`thread_id`) |
 | **Fallback System** | Backup content if website scraping fails |
 | **Hosted on HuggingFace** | Free deployment with Gradio Spaces |
 
@@ -116,7 +116,7 @@ career-conversation-AI-agent-chatbot/
 4. **Agent Processing**: The configured LLM (`CHAT_MODEL`) processes with career context
 5. **Tool Execution**: Optionally records user details or unknown questions
 6. **Push Notification**: Sends alert to Pushover for visitor tracking
-7. **Memory**: Conversation state is checkpointed per visitor IP via LangGraph `InMemorySaver`
+7. **Memory**: Conversation state is checkpointed per browser session (Gradio `session_hash`) via LangGraph `InMemorySaver`
 8. **Response**: Returns professional, first-person career response
 
 ## Quick Start

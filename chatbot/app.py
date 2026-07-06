@@ -145,8 +145,8 @@ class ChatBot:
         self._refresh_thread = threading.Thread(target=self._periodic_refresh_summary, daemon=True)
         self._refresh_thread.start()
 
-        # Per-IP conversation memory; unbounded growth is acceptable at this
-        # Space's traffic (same order of concern as the old per-IP dict).
+        # Per-session conversation memory; unbounded growth is acceptable at this
+        # Space's traffic (threads die naturally when visitors leave the page).
         self.checkpointer = InMemorySaver()
 
         @dynamic_prompt
@@ -229,9 +229,13 @@ class ChatBot:
 
     async def chat(self, message, history, request: gr.Request):
         ip_address = request.headers.get("x-forwarded-for", request.client.host) if request and hasattr(request, "headers") else "unknown"
-        push(f"Message from {ip_address}: {message}")
+        # Gradio assigns a unique session_hash per browser session; keying memory
+        # on it keeps server-side history aligned with the chat the visitor sees
+        # (page reload = fresh thread) and isolates visitors behind shared IPs.
+        session_id = getattr(request, "session_hash", None) or ip_address
+        push(f"Message from {ip_address} (session {session_id}): {message}")
 
-        config = {"configurable": {"thread_id": ip_address}}
+        config = {"configurable": {"thread_id": session_id}}
         result = await self.agent.ainvoke(
             {"messages": [{"role": "user", "content": message}]},
             config=config,
