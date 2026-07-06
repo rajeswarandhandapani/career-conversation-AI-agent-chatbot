@@ -243,9 +243,33 @@ class ChatBot:
         return extract_text(result["messages"][-1].content)
 
 
+# Matches the rajeswarandhandapani.com brand (main.css): the site's orange
+# palette (#ea580c primary, #f97316 accent, #c2410c hover) is Tailwind orange
+# 600/500/700 — identical to Gradio's built-in "orange" palette, so referencing
+# *primary_* below yields exact brand colors.
+def build_theme():
+    return gr.themes.Origin(
+        primary_hue="orange",
+        neutral_hue="gray",
+        font=[gr.themes.GoogleFont("Noto Sans"), "ui-sans-serif", "system-ui", "sans-serif"],
+    ).set(
+        # Solid orange buttons like the site's .btn-hero-primary (Origin's
+        # default is a pale gradient with orange text)
+        button_primary_background_fill="*primary_600",
+        button_primary_background_fill_hover="*primary_700",
+        button_primary_border_color="*primary_600",
+        button_primary_text_color="white",
+        button_primary_background_fill_dark="*primary_600",
+        button_primary_background_fill_hover_dark="*primary_700",
+        button_primary_border_color_dark="*primary_600",
+        button_primary_text_color_dark="white",
+        color_accent="*primary_600",
+    )
+
+
 if __name__ == "__main__":
     chatBot = ChatBot()
-    
+
     app = gr.ChatInterface(
         chatBot.chat,
         chatbot=gr.Chatbot(
@@ -261,4 +285,4 @@ if __name__ == "__main__":
         autofocus=True,
         autoscroll=True,
     )
-    app.launch(theme=gr.themes.Origin())
+    app.launch(theme=build_theme())
