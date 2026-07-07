@@ -1,5 +1,5 @@
 ---
-title: Career Conversation AI Agent Chatbot
+title: Career-AI-Agent-Chatbot
 emoji: 💼
 colorFrom: blue
 colorTo: indigo
